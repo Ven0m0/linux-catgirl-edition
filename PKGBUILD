@@ -31,10 +31,10 @@ _minor=.5
 # include partial clear linux[^1] patches
 #
 # [^1]: community maintained clearlinux patchset: https://git.staropensource.de/StarOpenSource/Linux-Tachyon
-: "${_import_clear_patchset:=no}"
+: "${_import_clear_patchset:=yes}"
 
 # include partial xanmod patches
-: "${_import_xanmod_patchset:=no}"
+: "${_import_xanmod_patchset:=yes}"
 
 # patchset specific tweaks
 
@@ -197,7 +197,7 @@ _minor=.5
 # if you have very low memory (i.e. embedded or <200 mb), you may want `disabled`
 #
 # If unsure, select `always`
-: "${_hugepage:=always}"
+: "${_hugepage:=madvise}"
 
 # Optimize kernel for a specific processor
 #
@@ -222,7 +222,7 @@ _minor=.5
 #       Hence, the documentation above is mostly x86_64 only.
 #
 # If unsure, select `x86-64` (baseline x86_64, should work everywhere)
-: "${_processor_opt:=x86-64}"
+: "${_processor_opt:=native}"
 
 # supported cpu processor vendors
 #
@@ -243,7 +243,7 @@ _minor=.5
 #       disabled on arch linux. do it yourself
 # [^2]: techinically `all` won't actually do anything, because by default
 #       the config file has them enabled by default.
-: "${_supported_cpu_vendor:=all}"
+: "${_supported_cpu_vendor:=intel}"
 
 # clang LTO (Link Time Optimization) mode
 #
@@ -267,7 +267,7 @@ _minor=.5
 #
 # [^1]: Well, to my knowledge devirtualization isn't applicable in Linux's case, as C does not do virtual calls[^2]
 # [^2]: Except vDSO, but to my knowledge, vDSO does not benefit from LTO because it is compiled separately.
-: "${_use_llvm_lto:=thin}"
+: "${_use_llvm_lto:=full}"
 
 # https://wiki.archlinux.org/title/NVIDIA
 # pick the right module to build.
@@ -275,7 +275,7 @@ _minor=.5
 # build nvidia
 : "${_build_nvidia:=no}"
 # or build nvidia_open
-: "${_build_nvidia_open:=no}"
+: "${_build_nvidia_open:=yes}"
 
 # Header packaging
 #
@@ -841,14 +841,14 @@ _minor=.5
 # interestingly, the upstream Linux kernel has this disabled by default, but Arch kernel enables this.
 #
 # If unsure, select no
-: "${_no_checking_linkedlist_integrity:=no}"
+: "${_no_checking_linkedlist_integrity:=yes}"
 
 # Disable stack corruption on schedule()
 #
 # Disables stack corruption checking. Documentation states the performance overhead is minimal, so take as you will.
 #
 # If unsure, select no
-: "${_no_schedule_stack_corruption:=no}"
+: "${_no_schedule_stack_corruption:=yesd}"
 
 # Disable stack protector
 #
@@ -883,7 +883,7 @@ _minor=.5
 #  4. make kernel binary smaller
 #
 # If unsure, select no
-: "${_no_ibt:=no}"
+: "${_no_ibt:=yes}"
 
 # Disable hardening of the kernel slab allocater freelist
 #
