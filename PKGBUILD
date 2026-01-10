@@ -18,7 +18,7 @@
 # if you are updating the kernel, consider running `git stash && git fetch && git pull && git stash pop` instead
 # of updating these values
 _major=6.18
-_minor=.3
+_minor=.4
 
 # select custom patchset(s)
 #
@@ -120,10 +120,10 @@ _minor=.3
 #
 # If the kernel breaks, disable this option.
 #
-# If unsure, select yes
+# If unsure, select no
 #
 # [^1]: https://lore.kernel.org/lkml/CA+55aFz2sNBbZyg-_i8_Ldr2e8o9dfvdSfHHuRzVtP2VMAUWPg@mail.gmail.com/
-: "${_cflags_O3:=yes}"
+: "${_cflags_O3:=no}"
 
 # Enable Google's TCP BBR3
 #
@@ -445,12 +445,12 @@ _minor=.3
 
 # Disable hibernation
 #
-# I don't like hibernation - it stores your entire system memory into disk, which on SSDs, can reduce its lifespan
-# and on HDDs, might take a bit to resume.
+# I don't like hibernation - it stores your entire system memory into disk, which on SSDs, reduces its lifespan
+# dramatically.
 #
-# Use suspend-to-ram instead. I have no clue how your crappy laptops are draining battery while in s2idle/deep sleep.
-# Also, using suspend-then-hibernate won't fix the draining issue; suspend-and-hibernate wont fix the draining issue.
-# Fix your hardware.
+# Use suspend-to-ram instead. I have no clue how modern laptops are draining battery quickly while in s2idle/deep sleep.
+# Also, using suspend-then-hibernate won't fix the draining issue; the keyboard is often kept active waiting for
+# keypresses, for instance.
 #
 # There's also the fact that Linux mainline (currently) doesnt support hibernation if secure boot is enabled and the
 # lockdown LSM is also active.
@@ -468,15 +468,15 @@ _minor=.3
 # If unsure, select no
 : "${_no_compressed_initramfs:=no}"
 
-# Disable VM support
+# Disable Virtual Machine support
 #
 # Makes the kernel optimized for bare metal by no longer providing virtual machine support
 # in particular, this disables KVM support, kernel guest support, xen drivers, et al.
 #
 # docker **desktop** (not regular docker) uses KVM.
 #
-# If unsure, select yes
-: "${_no_vm:=yes}"
+# If unsure, select no
+: "${_no_vm:=no}"
 
 # No foreign partitioning schemes
 #
@@ -908,8 +908,7 @@ makedepends=(
 )
 
 _patchsource_cachyos="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${_major}"
-_patchsource_xanmod="https://gitlab.com/xanmod/linux-patches/-/raw/master/linux-6.16.y-xanmod"
-_patchsource_clear="https://raw.githubusercontent.com/a-catgirl-dev/linux-catgirl-edition/refs/heads/dev/patches" # change this to clears' own URL
+_patchsource_xanmod="https://gitlab.com/xanmod/linux-patches/-/raw/master/linux-6.18.y-xanmod"
 _nv_ver=590.48.01
 _nv_pkg="NVIDIA-Linux-x86_64-${_nv_ver}"
 _nv_open_pkg="NVIDIA-kernel-module-source-${_nv_ver}"
@@ -919,17 +918,11 @@ source=(
     "${_patchsource_cachyos}/all/0001-cachyos-base-all.patch"
 )
 
-# apply clear linux patchset
-if [ "${_import_clear_patchset:=yes}" = "yes" ]; then
-    source+=("${_patchsource_clear}/clear-linux-patchset.patch")
-fi
-
 # apply xanmod patchset
 if [ "${_import_xanmod_patchset:=yes}" = "yes" ]; then
     source+=(
     "${_patchsource_xanmod}/xanmod/0010-XANMOD-block-Set-rq_affinity-to-force-complete-I-O-r.patch"
     "${_patchsource_xanmod}/xanmod/0014-XANMOD-mm-Raise-max_map_count-default-value.patch"
-    "${_patchsource_xanmod}/xanmod/0016-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
     )
 fi
 
@@ -986,6 +979,17 @@ prepare() {
         echo "Applying patch $src..."
         patch -Np1 < "../$src"
     done
+
+    # HACK: pkgbuild pisses me off. simply doing `source+=("patches/clear-linux-patchset.patch")`... makes pkgbuild
+    # NOT search in patches/. it runs off and says this gem:
+    # ==> ERROR: clear-linux-patchset.patch was not found in the build directory and is not a URL.
+    # look in patches/ pLEASE
+    if [[ $_import_clear_patchset == yes ]]; then
+        echo "Applying patch clear-linux-patchset.patch"
+        # srcdir is src/, back up a bit into root (where pkgbuild is) again
+        # engineering 101
+        patch -Np1 < "$srcdir/../patches/clear-linux-patchset.patch"
+    fi
 
     echo "Setting config..."
     cp ../config .config
